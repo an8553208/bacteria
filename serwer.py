@@ -6,3 +6,8 @@ main_socket.bind(('localhost',10000))
 main_socket.setblocking(False)
 main_socket.listen(5)
 print ('socket создан')
+while True:
+    new_socket, addr = main_socket.accept()
+    print('Подключился', addr)
+    new_socket.setblocking(False)
+
