@@ -6,8 +6,24 @@ main_socket.bind(('localhost',10000))
 main_socket.setblocking(False)
 main_socket.listen(5)
 print ('socket создан')
+plaers = []
 while True:
-    new_socket, addr = main_socket.accept()
-    print('Подключился', addr)
-    new_socket.setblocking(False)
+    try:
+        new_socket, addr = main_socket.accept()
+        print('Подключился', addr)
+        new_socket.setblocking(False)
+        plaers.append(new_socket)
+    except BlockingIOError:
+        pass
+    for sock in plaers:
+        try:
+            data = sock.recv(1024).decode()
+            print (data)
+        except:
+            pass    
+
+
+
+
+
 
