@@ -20,7 +20,14 @@ while True:
             data = sock.recv(1024).decode()
             print (data)
         except:
-            pass    
+            pass   
+    for sock in plaers:
+        try:
+            sock.send("1".encode())
+        except:
+            plaers.remove(sock)  
+            sock.close()
+
 
 
 
