@@ -5,7 +5,7 @@ from sqlalchemy import create_engine,Column,Integer,String
 from sqlalchemy.orm import declarative_base,sessionmaker
 import faker
 import random
-
+import pygame
 
 
 
@@ -18,7 +18,7 @@ class Players(Base):
     adres = Column(String)
     x = Column(Integer,default=500)
     y = Column(Integer,default=500)
-    size = Column(Integer,default=50)
+    size = Column(Integer,default=10)
     errors = Column(Integer,default=0)
     ABSspeed = Column(Integer,default=1)
     speedx = Column(Integer,default=0)
@@ -35,7 +35,7 @@ class LocalPlayer():
         self.DB = s.get(Players,self.id)
         self.x=500
         self.y=500
-        self.size=50
+        self.size=10
         self.errors=0
         self.ABSspeed=1
         self.speedx=0
@@ -43,6 +43,15 @@ class LocalPlayer():
 Base.metadata.create_all(engine)
 Session = sessionmaker(engine)
 s = Session()
+pygame.init()
+width_room=5000
+height_room=5000
+width_server=300
+height_server=300
+screen = pygame.display.set_mode((width_server,height_server))
+pygame.display.set_caption("SERVER")
+clok = pygame.time.Clock()
+Fps = 180
 main_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
 main_socket.bind(('localhost',10000))
@@ -51,28 +60,35 @@ main_socket.listen(5)
 print ('socket создан')
 plaers = { }
 while True:
+    clok.tick(Fps)
     try:
         new_socket, addr = main_socket.accept()
         print('Подключился', addr)
         new_socket.setblocking(False)
-        plaers.append(new_socket)
+        player = Players('name',addr)
+        s.merge(player)
+        s.commit()
+        addr=f'({addr[0]},{addr[1]})'
+        data = s.query(Players).filter(Players.adres==addr)
+        for user in data:
+            localplayer = LocalPlayer(user.id,user.name,new_socket,addr)
+            plaers[user.id] = localplayer
     except BlockingIOError:
         pass
-    for sock in plaers:
+    for id in list(plaers):
         try:
-            data = sock.recv(1024).decode()
+            data = plaers[id].sock.recv(1024).decode()
             print (data)
         except:
             pass   
-    for sock in plaers:
+    for id in list(plaers):
         try:
-            sock.send("1".encode())
-        except:
-            plaers.remove(sock)  
-            sock.close()
-
-
-
+            plaers[id].sock.send("1".encode())
+        except: 
+            plaers[id].sock.close()
+            del plaers[id]
+            s.query(Players).filter(Players.id==id).delete()
+            s.commit()
 
 
 

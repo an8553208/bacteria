@@ -11,7 +11,7 @@ width = 800
 height = 600
 CC = (width//2,height//2)
 old = (0,0)
-radius = 50
+radius = 10
 screen = pygame.display.set_mode((width,height))
 pygame.display.set_caption('бактерия')
 run = True
@@ -23,9 +23,10 @@ while run:
         pos = pygame.mouse.get_pos()
         vector = (pos[0]-CC[0],pos[1]-CC[1])
         lenv = math.sqrt(vector[0]**2 + vector[1]**2)
-        vector = (vector[0]/lenv,vector[1]/lenv)
+        if lenv!= 0:
+            vector = (vector[0]/lenv,vector[1]/lenv)
         if lenv < radius:
-            vector = (0,0)
+            old = (0,0)
         if vector != old:
             old = vector
             msg = f"<{vector[0]},{vector[1]}>"
