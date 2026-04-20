@@ -40,14 +40,26 @@ class LocalPlayer():
         self.ABSspeed=1
         self.speedx=0
         self.speedy=0
+    def update(self):
+        self.x+=self.speedx
+        self.y+=self.speedy
+    def change_speed(self,vector):
+        if vector[0]==0 and vector[1]==0:
+            self.speedx=0
+            self.speedy=0
+        else:
+            vector=vector[0]*self.ABSspeed,vector[1]*self.ABSspeed
+            self.speedx=vector[0]
+            self.speedy=vector[1]
+    
 Base.metadata.create_all(engine)
 Session = sessionmaker(engine)
 s = Session()
 pygame.init()
 width_room=5000
 height_room=5000
-width_server=300
-height_server=300
+width_server=500
+height_server=500
 screen = pygame.display.set_mode((width_server,height_server))
 pygame.display.set_caption("SERVER")
 clok = pygame.time.Clock()
@@ -59,7 +71,8 @@ main_socket.setblocking(False)
 main_socket.listen(5)
 print ('socket создан')
 plaers = { }
-while True:
+run = True
+while run:
     clok.tick(Fps)
     try:
         new_socket, addr = main_socket.accept()
@@ -89,7 +102,16 @@ while True:
             del plaers[id]
             s.query(Players).filter(Players.id==id).delete()
             s.commit()
-
-
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            run = False
+    screen.fill('darkgreen')
+    for id in list(plaers): 
+        player = plaers[id]
+        x = player.x*width_server//width_room
+        y = player.y*width_server//width_room
+        size = player.size*width_server//width_room
+        pygame.draw.circle(screen,'red',(x,y),size)
+    pygame.display.update()
 
 

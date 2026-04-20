@@ -33,7 +33,7 @@ while run:
             main_socket.send(msg.encode())
     data = main_socket.recv(1024).decode()
     print (data)
-    screen.fill('green')
+    screen.fill('darkgreen')
     pygame.draw.circle(screen, (255, 0, 0), CC, radius)
     pygame.display.update()
 
