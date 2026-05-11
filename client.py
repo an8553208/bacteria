@@ -6,7 +6,6 @@ main_socket = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP,socket.TCP_NODELAY,1)
 main_socket.connect(('localhost',10000))
 pygame.init()
-radius = 50
 width = 800
 height = 600
 CC = (width//2,height//2)
@@ -26,7 +25,7 @@ while run:
         if lenv!= 0:
             vector = (vector[0]/lenv,vector[1]/lenv)
         if lenv < radius:
-            old = (0,0)
+            vector = (0,0)
         if vector != old:
             old = vector
             msg = f"<{vector[0]},{vector[1]}>"

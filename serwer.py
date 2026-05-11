@@ -44,6 +44,7 @@ class LocalPlayer():
         self.x+=self.speedx
         self.y+=self.speedy
     def change_speed(self,vector):
+        vector = find(vector)
         if vector[0]==0 and vector[1]==0:
             self.speedx=0
             self.speedy=0
@@ -51,7 +52,16 @@ class LocalPlayer():
             vector=vector[0]*self.ABSspeed,vector[1]*self.ABSspeed
             self.speedx=vector[0]
             self.speedy=vector[1]
-    
+
+def find(vector):
+    start = vector.find('<')
+    end = vector.find('>')
+    if start < end and start != -1:
+        data = vector[start+1:end]
+        data = data.split(',')
+        data = list(map(float,data))
+        return data
+    return ''
 Base.metadata.create_all(engine)
 Session = sessionmaker(engine)
 s = Session()
@@ -92,6 +102,7 @@ while run:
         try:
             data = plaers[id].sock.recv(1024).decode()
             print (data)
+            plaers[id].change_speed(data)
         except:
             pass   
     for id in list(plaers):
@@ -112,6 +123,11 @@ while run:
         y = player.y*width_server//width_room
         size = player.size*width_server//width_room
         pygame.draw.circle(screen,'red',(x,y),size)
+
+    for id in list (plaers):
+        plaers[id].update()
+        
+    
     pygame.display.update()
 
 
