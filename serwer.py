@@ -42,29 +42,33 @@ class LocalPlayer():
         self.speedx = 0
         self.speedy = 0
 
+    def syns(self):
+        self.DB.x = self.x
+        self.DB.y = self.y
+        self.DB.size = self.size
+        self.DB.errors = self.errors
+        self.DB.ABSspeed = self.ABSspeed
+        self.DB.speedx = self.speedx
+        self.DB.speedy = self.speedy
+        s.merge(self.DB)
+        s.commit()
+
+
     def update(self):
         self.x += self.speedx
         self.y += self.speedy
-        if self.DB:
-            self.DB.x = self.x
-            self.DB.y = self.y
-            s.merge(self.DB)
-            s.commit()
 
     def change_speed(self, vector):
         vector = find(vector)
+
         if vector[0] == 0 and vector[1] == 0:
             self.speedx = 0
             self.speedy = 0
         else:
             vector = vector[0] * self.ABSspeed, vector[1] * self.ABSspeed
-            self.speedx = int(vector[0])
-            self.speedy = int(vector[1])
-        if self.DB:
-            self.DB.speedx = self.speedx
-            self.DB.speedy = self.speedy
-            s.merge(self.DB)
-            s.commit()
+            self.speedx = float(vector[0])
+            self.speedy = float(vector[1])
+
 
 def find(vector):
     start = vector.find('<')
@@ -74,7 +78,7 @@ def find(vector):
         data = data.split(',')
         data = list(map(float, data))
         return data
-    return [0, 0]
+    return ''
 
 Base.metadata.create_all(engine)
 Session = sessionmaker(engine)
@@ -122,10 +126,7 @@ while run:
                 print(data)
                 players[player_id].change_speed(data)
         except (BlockingIOError, ConnectionResetError, OSError):
-            players[player_id].sock.close()
-            s.query(Players).filter(Players.id == player_id).delete()
-            s.commit()
-            del players[player_id]
+            pass
 
     for player_id in list(players.keys()):
         try:

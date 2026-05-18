@@ -2,6 +2,24 @@ import socket
 import random
 import pygame
 import math
+import tkinter as tk
+from tkinter import ttk
+import tkinter.messagebox
+
+name = ''
+color = ''
+
+colors = ['Maroon', 'DarkRed', 'FireBrick', 'Red', 'Salmon', 'Tomato', 'Coral', 'OrangeRed', 'Chocolate', 'SandyBrown'
+          ,'DarkOrange', 'Orange', 'DarkGoldenrod', 'Goldenrod', 'Gold', 'Olive', 'Yellow', 'YellowGreen', 'GreenYellow'
+          ,'Chartreuse', 'LawnGreen', 'Green', 'Lime', 'SpringGreen', 'MediumSpringGreen', 'Turquoise'
+          ,'LightSeaGreen', 'MediumTurquoise', 'Teal', 'DarkCyan', 'Aqua', 'Cyan', 'DeepSkyBlue'
+          ,'DodgerBlue', 'RoyalBlue', 'Navy', 'DarkBlue', 'MediumBlue']
+
+root = tk.Tk()
+root.geometry('300x200')
+root.title('login')
+
+
 
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -31,7 +49,7 @@ while run:
             vector = (0, 0)
         if vector != old:
             old = vector
-            msg = f"<{vector[0]:.3f},{vector[1]:.3f}>"
+            msg = f"<{vector[0]},{vector[1]}>"
             main_socket.send(msg.encode())
 
     try:
