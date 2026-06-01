@@ -15,10 +15,40 @@ colors = ['Maroon', 'DarkRed', 'FireBrick', 'Red', 'Salmon', 'Tomato', 'Coral', 
           ,'LightSeaGreen', 'MediumTurquoise', 'Teal', 'DarkCyan', 'Aqua', 'Cyan', 'DeepSkyBlue'
           ,'DodgerBlue', 'RoyalBlue', 'Navy', 'DarkBlue', 'MediumBlue']
 
+def scroll(event):
+    global color
+    color=combo.get()
+    style.configure("TCombobox",fieldbackground=color,background="white")
+
+def log ():
+    global name
+    name = row.get()
+    if name and color:
+        root.destroy()
+        root.quit()
+    else:
+        tk.messagebox.showerror("ошибка","ты не ввёл имя или цвет")
+
+
 root = tk.Tk()
 root.geometry('300x200')
 root.title('login')
+style = ttk.Style()
+style.theme_use('clam')
+namelabel = tk.Label(root,text='enter your name:')
+namelabel.pack()
+row= tk.Entry(root,width=30,justify="center")
+row.pack()
+colorlabel = tk.Label(root,text='choose your color:')
+colorlabel.pack()
+combo = ttk.Combobox(root,values = colors,textvariable=color)
+combo.pack()
+combo.bind('<<ComboboxSelected>>',scroll)
+login = tk.Button(root,text='play game',command=log)
+login.pack()
 
+
+root.mainloop()
 
 
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -65,7 +95,7 @@ while run:
         run = False
 
     screen.fill('darkgreen')
-    pygame.draw.circle(screen, (255, 0, 0), CC, radius)
+    pygame.draw.circle(screen,color, CC, radius)
     pygame.display.update()
 
 main_socket.close()

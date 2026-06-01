@@ -80,6 +80,8 @@ def find(vector):
         return data
     return ''
 
+
+
 Base.metadata.create_all(engine)
 Session = sessionmaker(engine)
 s = Session()
@@ -151,6 +153,7 @@ while run:
 
     for player_id in list(players.keys()):
         players[player_id].update()
+        players[player_id].syns()
 
     pygame.display.update()
 
