@@ -22,6 +22,10 @@ class Players(Base):
     ABSspeed = Column(Integer, default=1)
     speedx = Column(Integer, default=0)
     speedy = Column(Integer, default=0)
+    color = Column(String,default="red")
+    w_wision = Column(Integer,default=800)
+    h_wision = Column(Integer,default=600)
+
 
     def __init__(self, name, adres):
         self.name = name
@@ -41,6 +45,9 @@ class LocalPlayer():
         self.ABSspeed = 1
         self.speedx = 0
         self.speedy = 0
+        self.color="red"
+        self.w_wision=800
+        self.h_wision=600
 
     def syns(self):
         self.DB.x = self.x
@@ -50,9 +57,27 @@ class LocalPlayer():
         self.DB.ABSspeed = self.ABSspeed
         self.DB.speedx = self.speedx
         self.DB.speedy = self.speedy
+        self.DB.color = self.color
+        self.DB.w_wision = self.w_wision
+        self.DB.h_wision = self.h_wision
+
         s.merge(self.DB)
         s.commit()
 
+    def load(self):
+        self.x = self.DB.x
+        self.y = self.DB.y
+        self.size = self.DB.size
+        self.errors = self.DB.errors
+        self.ABSspeed = self.DB.ABSspeed
+        self.speedx =  self.DB.speedx
+        self.speedy = self.DB.speedy
+        self.color = self.DB.color
+        self.w_wision = self.DB.w_wision
+        self.h_wision = self.DB.h_wision 
+        return self
+    
+    
 
     def update(self):
         self.x += self.speedx
@@ -80,6 +105,14 @@ def find(vector):
         return data
     return ''
 
+def find_login(data):
+    start = data.find('<')
+    end = data.find('>')
+    if start < end and start != -1:
+        data = data[start + 1:end]
+        data = data.split(',')
+        return data
+    return ''
 
 
 Base.metadata.create_all(engine)
@@ -111,11 +144,16 @@ while run:
         new_socket, addr = main_socket.accept()
         print('Подключился', addr)
         new_socket.setblocking(False)
+        login = new_socket.recv(1024).decode()
         addr_str = f'({addr[0]},{addr[1]})'
         player_db = Players(name=f'Player_{len(players) + 1}', adres=addr_str)
+        if login.startswith('color'):
+            data = find_login (login)
+            player_db.name=data[0]
+            player_db.color=data[1]
         s.add(player_db)
         s.commit()
-        local_player = LocalPlayer(player_db.id, player_db.name, new_socket, addr_str)
+        local_player = LocalPlayer(player_db.id, player_db.name, new_socket, addr_str).load()
         local_player.DB = player_db
         players[player_db.id] = local_player
     except BlockingIOError:
@@ -149,7 +187,7 @@ while run:
         x = player.x * width_server // width_room
         y = player.y * width_server // width_room
         size = player.size * width_server // width_room
-        pygame.draw.circle(screen, 'red', (x, y), size)
+        pygame.draw.circle(screen, player.color, (x, y), size)
 
     for player_id in list(players.keys()):
         players[player_id].update()

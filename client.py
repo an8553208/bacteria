@@ -54,6 +54,7 @@ root.mainloop()
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 main_socket.connect(('localhost', 10000))
+main_socket.send(f'color:<{name},{color}>'.encode())
 pygame.init()
 width = 800
 height = 600
