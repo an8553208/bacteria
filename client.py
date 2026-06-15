@@ -28,6 +28,19 @@ def log ():
         root.quit()
     else:
         tk.messagebox.showerror("ошибка","ты не ввёл имя или цвет")
+def find(data):
+    start = data.find('<')
+    end = data.find('>')
+    if start < end and start != -1:
+        data = data[start + 1:end]
+        data = data.split(',')
+        return data
+    return ''
+def draw_bacteries(data):
+    for bug in data:
+        data_bug = bug.split(" ")
+
+
 
 
 root = tk.Tk()
@@ -83,17 +96,11 @@ while run:
             msg = f"<{vector[0]},{vector[1]}>"
             main_socket.send(msg.encode())
 
-    try:
-        main_socket.settimeout(0.1)
-        data = main_socket.recv(1024).decode()
-        if data:
-            print(data)
-    except socket.timeout:
-        pass
-    except ConnectionResetError:
-        run = False
-    except Exception:
-        run = False
+    
+    data = main_socket.recv(1024).decode()
+    data = find(data)
+
+
 
     screen.fill('darkgreen')
     pygame.draw.circle(screen,color, CC, radius)

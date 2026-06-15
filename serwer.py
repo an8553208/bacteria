@@ -168,9 +168,37 @@ while run:
         except (BlockingIOError, ConnectionResetError, OSError):
             pass
 
+    visable_bacteries={}
+    for id in list(players):
+        visable_bacteries[id]=[]
+    pairs = list(players.items())
+    for i in range(0,len(pairs)):
+        for j in range(i,len(pairs)):
+            hero1:LocalPlayer = pairs[i][1]
+            hero2:LocalPlayer = pairs[j][1]
+            dist_x = hero2.x - hero1.x
+            dist_y = hero2.y - hero1.y
+            if abs(dist_x)<=hero1.w_wision//2+hero2.size and abs(dist_y)<=hero1.h_wision//2+hero2.size:
+                x = str(round(dist_x))
+                y = str(round(dist_y))
+                size = str(round(hero2.size))
+                color = hero2.color
+                data = f'{x} {y} {size} {color}'
+                visable_bacteries[hero1.id].append(data)
+            if abs(dist_x)<=hero2.w_wision//2+hero1.size and abs(dist_y)<=hero2.h_wision//2+hero1.size:
+                x = str(round(-dist_x))
+                y = str(round(-dist_y))
+                size = str(round(-hero1.size))
+                color = hero1.color
+                data = f'{x} {y} {size} {color}'
+                visable_bacteries[hero2.id].append(data)    
+    for id in list(players):
+        visable_bacteries[id] = f'<{",".join(visable_bacteries[id])}>'
+
+
     for player_id in list(players.keys()):
         try:
-            players[player_id].sock.send("1".encode())
+            players[player_id].sock.send(visable_bacteries[player_id].encode())
         except (ConnectionResetError, OSError):
             players[player_id].sock.close()
             s.query(Players).filter(Players.id == player_id).delete()
