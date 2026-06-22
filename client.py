@@ -39,6 +39,11 @@ def find(data):
 def draw_bacteries(data):
     for bug in data:
         data_bug = bug.split(" ")
+        x = CC[0] + int(data_bug[0])
+        y = CC[1] + int(data_bug[1])
+        size = int(data_bug[2])
+        color = data_bug[3]
+        pygame.draw.circle(screen, color, (x, y), size)
 
 
 
@@ -101,8 +106,10 @@ while run:
     data = find(data)
 
 
-
+    print (data)
     screen.fill('darkgreen')
+    if data!=['']:
+        draw_bacteries(data)
     pygame.draw.circle(screen,color, CC, radius)
     pygame.display.update()
 

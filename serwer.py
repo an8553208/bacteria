@@ -80,8 +80,23 @@ class LocalPlayer():
     
 
     def update(self):
-        self.x += self.speedx
-        self.y += self.speedy
+        if self.x - self.size<=0:
+            if self.speedx>0:
+                self.x += self.speedx
+        elif self.x + self.size>=width_room:
+            if self.speedx<0:
+                self.x += self.speedx
+        else:
+            self.x += self.speedx
+
+        if self.y - self.size<=0:
+            if self.speedy>0:
+                self.y += self.speedy
+        elif self.y + self.size>=height_room:
+            if self.speedy<0:
+                self.y += self.speedy
+        else:
+            self.y += self.speedy
 
     def change_speed(self, vector):
         vector = find(vector)
@@ -129,6 +144,17 @@ pygame.display.set_caption("SERVER")
 clok = pygame.time.Clock()
 Fps = 180
 
+colors = ['Maroon', 'DarkRed', 'FireBrick', 'Red', 'Salmon', 'Tomato', 'Coral', 'OrangeRed', 'Chocolate', 'SandyBrown'
+          ,'DarkOrange', 'Orange', 'DarkGoldenrod', 'Goldenrod', 'Gold', 'Olive', 'Yellow', 'YellowGreen', 'GreenYellow'
+          ,'Chartreuse', 'LawnGreen', 'Green', 'Lime', 'SpringGreen', 'MediumSpringGreen', 'Turquoise'
+          ,'LightSeaGreen', 'MediumTurquoise', 'Teal', 'DarkCyan', 'Aqua', 'Cyan', 'DeepSkyBlue'
+          ,'DodgerBlue', 'RoyalBlue', 'Navy', 'DarkBlue', 'MediumBlue']
+
+mob_count = random.randint(20,30)
+fake = faker.Faker("ru_RU")
+
+
+
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
 main_socket.bind(('localhost', 10000))
@@ -138,6 +164,19 @@ print('socket создан')
 players = {}
 run = True
 
+for x in range(mob_count):
+    server_mob = Players(fake.user_name(),None)
+    server_mob.color=random.choice(colors)
+    server_mob.x = random.randint(0,width_room)
+    server_mob.y = random.randint(0,height_room)
+    server_mob.speedx = random.uniform(-1,1)
+    server_mob.speedy = random.uniform(-1,1)
+    server_mob.size = random.randint(5,50)
+
+    s.add(server_mob)
+    s.commit()
+    local_mob = LocalPlayer(server_mob.id,server_mob.name,None,None).load()
+    players[server_mob.id] = local_mob
 while run:
     clok.tick(Fps)
     try:
@@ -160,50 +199,55 @@ while run:
         pass
 
     for player_id in list(players.keys()):
-        try:
-            data = players[player_id].sock.recv(1024).decode()
-            if data:
-                print(data)
-                players[player_id].change_speed(data)
-        except (BlockingIOError, ConnectionResetError, OSError):
-            pass
+        if players[player_id].sock is not None:
+                
+            try:
+                data = players[player_id].sock.recv(1024).decode()
+                if data:
+                    print(data)
+                    players[player_id].change_speed(data)
+            except (BlockingIOError, ConnectionResetError, OSError):
+                pass
 
     visable_bacteries={}
     for id in list(players):
         visable_bacteries[id]=[]
     pairs = list(players.items())
     for i in range(0,len(pairs)):
-        for j in range(i,len(pairs)):
+        for j in range(i+1,len(pairs)):
             hero1:LocalPlayer = pairs[i][1]
             hero2:LocalPlayer = pairs[j][1]
             dist_x = hero2.x - hero1.x
             dist_y = hero2.y - hero1.y
             if abs(dist_x)<=hero1.w_wision//2+hero2.size and abs(dist_y)<=hero1.h_wision//2+hero2.size:
-                x = str(round(dist_x))
-                y = str(round(dist_y))
-                size = str(round(hero2.size))
-                color = hero2.color
-                data = f'{x} {y} {size} {color}'
-                visable_bacteries[hero1.id].append(data)
+                if hero1.adres is not None:
+                    x = str(round(dist_x))
+                    y = str(round(dist_y))
+                    size = str(round(hero2.size))
+                    color = hero2.color
+                    data = f'{x} {y} {size} {color}'
+                    visable_bacteries[hero1.id].append(data)
             if abs(dist_x)<=hero2.w_wision//2+hero1.size and abs(dist_y)<=hero2.h_wision//2+hero1.size:
-                x = str(round(-dist_x))
-                y = str(round(-dist_y))
-                size = str(round(-hero1.size))
-                color = hero1.color
-                data = f'{x} {y} {size} {color}'
-                visable_bacteries[hero2.id].append(data)    
+                if hero2.adres is not None:
+                    x = str(round(-dist_x))
+                    y = str(round(-dist_y))
+                    size = str(round(hero1.size))
+                    color = hero1.color
+                    data = f'{x} {y} {size} {color}'
+                    visable_bacteries[hero2.id].append(data)    
     for id in list(players):
         visable_bacteries[id] = f'<{",".join(visable_bacteries[id])}>'
 
 
     for player_id in list(players.keys()):
-        try:
-            players[player_id].sock.send(visable_bacteries[player_id].encode())
-        except (ConnectionResetError, OSError):
-            players[player_id].sock.close()
-            s.query(Players).filter(Players.id == player_id).delete()
-            s.commit()
-            del players[player_id]
+        if players[player_id].sock is not None:
+            try:
+                players[player_id].sock.send(visable_bacteries[player_id].encode())
+            except (ConnectionResetError, OSError):
+                players[player_id].sock.close()
+                s.query(Players).filter(Players.id == player_id).delete()
+                s.commit()
+                del players[player_id]
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
