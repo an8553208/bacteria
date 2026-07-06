@@ -6,6 +6,7 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 import faker
 import random
 import pygame
+import math
 
 engine = create_engine("postgresql+psycopg2://postgres:228228765@localhost/PYTHON")
 Base = declarative_base()
@@ -109,6 +110,13 @@ class LocalPlayer():
             self.speedx = float(vector[0])
             self.speedy = float(vector[1])
 
+class Food:
+    def __init__(self,x,y,size,color):
+        self.x = x 
+        self.y = y 
+        self.size = size 
+        self.color = color 
+        
 
 def find(vector):
     start = vector.find('<')
@@ -153,7 +161,11 @@ colors = ['Maroon', 'DarkRed', 'FireBrick', 'Red', 'Salmon', 'Tomato', 'Coral', 
 mob_count = random.randint(20,30)
 fake = faker.Faker("ru_RU")
 
-
+food_count = 5000
+food_size = 1
+foods = []
+for i in range(food_count):
+    foods.append(Food(random.randint(0,width_room),random.randint(0,height_room),food_size,random.choice(colors)))
 
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -177,8 +189,12 @@ for x in range(mob_count):
     s.commit()
     local_mob = LocalPlayer(server_mob.id,server_mob.name,None,None).load()
     players[server_mob.id] = local_mob
+
+tick = -1
+
 while run:
     clok.tick(Fps)
+    tick += 1
     try:
         new_socket, addr = main_socket.accept()
         print('Подключился', addr)
@@ -206,9 +222,14 @@ while run:
                 if data:
                     print(data)
                     players[player_id].change_speed(data)
+
             except (BlockingIOError, ConnectionResetError, OSError):
                 pass
-
+        else:
+            if tick % Fps * 2 == 0:
+                if random.randint(1,10)>7:
+                    data= f'<{random.uniform(-1,1)},{random.uniform(-1,1)}>'
+                    players[player_id].change_speed(data)
     visable_bacteries={}
     for id in list(players):
         visable_bacteries[id]=[]
@@ -220,6 +241,11 @@ while run:
             dist_x = hero2.x - hero1.x
             dist_y = hero2.y - hero1.y
             if abs(dist_x)<=hero1.w_wision//2+hero2.size and abs(dist_y)<=hero1.h_wision//2+hero2.size:
+                distance = math.sqrt(dist_x**2+dist_y**2)
+                if distance <= hero1.size and hero1.size>= hero2.size * 1.1:
+                    hero2.size = 0
+                    hero2.speedx = 0
+                    hero2.speedy = 0
                 if hero1.adres is not None:
                     x = str(round(dist_x))
                     y = str(round(dist_y))
@@ -228,6 +254,11 @@ while run:
                     data = f'{x} {y} {size} {color}'
                     visable_bacteries[hero1.id].append(data)
             if abs(dist_x)<=hero2.w_wision//2+hero1.size and abs(dist_y)<=hero2.h_wision//2+hero1.size:
+                distance = math.sqrt(dist_x**2+dist_y**2)
+                if distance <= hero2.size and hero2.size>= hero1.size * 1.1:
+                    hero1.size = 0
+                    hero1.speedx = 0
+                    hero1.speedy = 0
                 if hero2.adres is not None:
                     x = str(round(-dist_x))
                     y = str(round(-dist_y))
