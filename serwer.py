@@ -161,11 +161,10 @@ colors = ['Maroon', 'DarkRed', 'FireBrick', 'Red', 'Salmon', 'Tomato', 'Coral', 
 mob_count = random.randint(20,30)
 fake = faker.Faker("ru_RU")
 
-food_count = 5000
-food_size = 1
+food_count = 1000
 foods = []
 for i in range(food_count):
-    foods.append(Food(random.randint(0,width_room),random.randint(0,height_room),food_size,random.choice(colors)))
+    foods.append(Food(random.randint(0,width_room),random.randint(0,height_room),random.randint(1,10),random.choice(colors)))
 
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -235,6 +234,24 @@ while run:
         visable_bacteries[id]=[]
     pairs = list(players.items())
     for i in range(0,len(pairs)):
+        for food in foods:
+            hero = pairs[i][1]
+            dist_x = food.x - hero.x
+            dist_y = food.y - hero.y
+            if abs(dist_x)<=hero.w_wision//2+food.size and abs(dist_y)<=hero.h_wision//2+food.size:
+                distance = math.sqrt(dist_x**2+dist_y**2)
+                if distance <= hero.size:
+                    hero.size = math.sqrt(hero.size**2 + food.size**2)
+                    food.size = 0
+                    foods.remove(food)
+                if hero.adres is not None and food.size!=0:
+                    x = str(round(dist_x))
+                    y = str(round(dist_y))
+                    size = str(round(food.size))
+                    color = food.color
+                    data = f'{x} {y} {size} {color}'
+                    visable_bacteries[hero.id].append(data)
+
         for j in range(i+1,len(pairs)):
             hero1:LocalPlayer = pairs[i][1]
             hero2:LocalPlayer = pairs[j][1]
@@ -243,6 +260,7 @@ while run:
             if abs(dist_x)<=hero1.w_wision//2+hero2.size and abs(dist_y)<=hero1.h_wision//2+hero2.size:
                 distance = math.sqrt(dist_x**2+dist_y**2)
                 if distance <= hero1.size and hero1.size>= hero2.size * 1.1:
+                    hero1.size = math.sqrt(hero1.size**2 + hero2.size**2)
                     hero2.size = 0
                     hero2.speedx = 0
                     hero2.speedy = 0
@@ -256,6 +274,7 @@ while run:
             if abs(dist_x)<=hero2.w_wision//2+hero1.size and abs(dist_y)<=hero2.h_wision//2+hero1.size:
                 distance = math.sqrt(dist_x**2+dist_y**2)
                 if distance <= hero2.size and hero2.size>= hero1.size * 1.1:
+                    hero2.size = math.sqrt(hero2.size**2 + hero1.size**2)
                     hero1.size = 0
                     hero1.speedx = 0
                     hero1.speedy = 0
@@ -269,16 +288,22 @@ while run:
     for id in list(players):
         visable_bacteries[id] = f'<{",".join(visable_bacteries[id])}>'
 
+    for id in list(players):
+        if players[id].size == 0 and players[id].errors > 500:
+            if players[id].sock is not None:
+                players[id].sock.close()
+            del players[id]
+            s.query(Players).filter(Players.id == id).delete()
+            s.commit()
+
 
     for player_id in list(players.keys()):
         if players[player_id].sock is not None:
             try:
                 players[player_id].sock.send(visable_bacteries[player_id].encode())
             except (ConnectionResetError, OSError):
-                players[player_id].sock.close()
-                s.query(Players).filter(Players.id == player_id).delete()
-                s.commit()
-                del players[player_id]
+                players[player_id].errors+=1
+                
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
