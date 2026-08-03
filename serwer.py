@@ -110,6 +110,8 @@ class LocalPlayer():
             self.speedx = float(vector[0])
             self.speedy = float(vector[1])
 
+    def new_speed(self):
+        self.ABSspeed= 10/self.size**0.5
 class Food:
     def __init__(self,x,y,size,color):
         self.x = x 
@@ -213,6 +215,22 @@ while run:
     except BlockingIOError:
         pass
 
+    if tick%10*Fps:
+        need = food_count - len(foods)
+        for i in range(need):
+            foods.append(Food(random.randint(0,width_room),random.randint(0,height_room),random.randint(1,10),random.choice(colors)))
+        need = mob_count - len(players)
+        for i in range(need):
+
+            server_mob = Players(fake.user_name(),None)
+            server_mob.color=random.choice(colors)
+            server_mob.x = random.randint(0,width_room)
+            server_mob.y = random.randint(0,height_room)
+            server_mob.speedx = random.uniform(-1,1)
+            server_mob.speedy = random.uniform(-1,1)
+            server_mob.size = random.randint(5,50)    
+
+    
     for player_id in list(players.keys()):
         if players[player_id].sock is not None:
                 
@@ -229,9 +247,7 @@ while run:
                 if random.randint(1,10)>7:
                     data= f'<{random.uniform(-1,1)},{random.uniform(-1,1)}>'
                     players[player_id].change_speed(data)
-    visable_bacteries={}
-    for id in list(players):
-        visable_bacteries[id]=[]
+    visable_bacteries={id: [] for id in players}        
     pairs = list(players.items())
     for i in range(0,len(pairs)):
         for food in foods:
@@ -244,6 +260,7 @@ while run:
                     hero.size = math.sqrt(hero.size**2 + food.size**2)
                     food.size = 0
                     foods.remove(food)
+                    hero.new_speed()
                 if hero.adres is not None and food.size!=0:
                     x = str(round(dist_x))
                     y = str(round(dist_y))
@@ -263,7 +280,8 @@ while run:
                     hero1.size = math.sqrt(hero1.size**2 + hero2.size**2)
                     hero2.size = 0
                     hero2.speedx = 0
-                    hero2.speedy = 0
+                    hero2.speedy = 0 
+                    hero1.new_speed()
                 if hero1.adres is not None:
                     x = str(round(dist_x))
                     y = str(round(dist_y))
@@ -278,6 +296,7 @@ while run:
                     hero1.size = 0
                     hero1.speedx = 0
                     hero1.speedy = 0
+                    hero2.new_speed()
                 if hero2.adres is not None:
                     x = str(round(-dist_x))
                     y = str(round(-dist_y))
@@ -286,6 +305,8 @@ while run:
                     data = f'{x} {y} {size} {color}'
                     visable_bacteries[hero2.id].append(data)    
     for id in list(players):
+        r_ = str(round(players[id].size))
+        visable_bacteries[id]=[r_] + visable_bacteries[id]
         visable_bacteries[id] = f'<{",".join(visable_bacteries[id])}>'
 
     for id in list(players):

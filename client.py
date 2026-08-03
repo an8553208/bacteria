@@ -109,7 +109,8 @@ while run:
     print (data)
     screen.fill('darkgreen')
     if data!=['']:
-        draw_bacteries(data)
+        radius = int(data[0])
+        draw_bacteries(data[1:])
     pygame.draw.circle(screen,color, CC, radius)
     pygame.display.update()
 
