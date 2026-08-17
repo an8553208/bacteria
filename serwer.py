@@ -49,6 +49,7 @@ class LocalPlayer():
         self.color="red"
         self.w_wision=800
         self.h_wision=600
+        self.l=1
 
     def syns(self):
         self.DB.x = self.x
@@ -99,6 +100,22 @@ class LocalPlayer():
         else:
             self.y += self.speedy
 
+        if self.size>100:
+            self.size-=self.size/36000
+
+        if self.size>=self.w_wision/4:
+            if self.w_wision<=width_room or self.h_wision<=height_room:
+                self.l*=2
+                self.w_wision=800*self.l
+                self.h_wision=600*self.l
+        if self.size<=self.h_wision/8:
+            if self.l>1:
+                self.l//=2
+                self.w_wision=800//self.l
+                self.h_wision=600//self.l
+                        
+        
+
     def change_speed(self, vector):
         vector = find(vector)
 
@@ -138,6 +155,8 @@ def find_login(data):
         data = data.split(',')
         return data
     return ''
+
+
 
 
 Base.metadata.create_all(engine)
@@ -224,8 +243,10 @@ while run:
 
             server_mob = Players(fake.user_name(),None)
             server_mob.color=random.choice(colors)
-            server_mob.x = random.randint(0,width_room)
-            server_mob.y = random.randint(0,height_room)
+            spawn = random.choice(foods)
+            foods.remove(spawn)
+            server_mob.x = spawn.x
+            server_mob.y = spawn.y
             server_mob.speedx = random.uniform(-1,1)
             server_mob.speedy = random.uniform(-1,1)
             server_mob.size = random.randint(5,50)    
@@ -262,9 +283,9 @@ while run:
                     foods.remove(food)
                     hero.new_speed()
                 if hero.adres is not None and food.size!=0:
-                    x = str(round(dist_x))
-                    y = str(round(dist_y))
-                    size = str(round(food.size))
+                    x = str(round(dist_x/hero.l))
+                    y = str(round(dist_y/hero.l))
+                    size = str(round(food.size/hero.l))
                     color = food.color
                     data = f'{x} {y} {size} {color}'
                     visable_bacteries[hero.id].append(data)
@@ -283,9 +304,9 @@ while run:
                     hero2.speedy = 0 
                     hero1.new_speed()
                 if hero1.adres is not None:
-                    x = str(round(dist_x))
-                    y = str(round(dist_y))
-                    size = str(round(hero2.size))
+                    x = str(round(dist_x/hero1.l))
+                    y = str(round(dist_y/hero1.l))
+                    size = str(round(hero2.size/hero1.l))
                     color = hero2.color
                     data = f'{x} {y} {size} {color}'
                     visable_bacteries[hero1.id].append(data)
@@ -298,14 +319,14 @@ while run:
                     hero1.speedy = 0
                     hero2.new_speed()
                 if hero2.adres is not None:
-                    x = str(round(-dist_x))
-                    y = str(round(-dist_y))
-                    size = str(round(hero1.size))
+                    x = str(round(-dist_x/hero2.l))
+                    y = str(round(-dist_y/hero2.l))
+                    size = str(round(hero1.size/hero2.l))
                     color = hero1.color
                     data = f'{x} {y} {size} {color}'
                     visable_bacteries[hero2.id].append(data)    
     for id in list(players):
-        r_ = str(round(players[id].size))
+        r_ = str(round(players[id].size/players[id].l))
         visable_bacteries[id]=[r_] + visable_bacteries[id]
         visable_bacteries[id] = f'<{",".join(visable_bacteries[id])}>'
 
