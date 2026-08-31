@@ -15,6 +15,30 @@ colors = ['Maroon', 'DarkRed', 'FireBrick', 'Red', 'Salmon', 'Tomato', 'Coral', 
           ,'LightSeaGreen', 'MediumTurquoise', 'Teal', 'DarkCyan', 'Aqua', 'Cyan', 'DeepSkyBlue'
           ,'DodgerBlue', 'RoyalBlue', 'Navy', 'DarkBlue', 'MediumBlue']
 
+class Grid:
+    def __init__(self,color,screen):
+        self.color = color
+        self.screen = screen
+        self.x = 0
+        self.y = 0
+        self.start_size = 200
+        self.size = self.start_size
+
+
+    def update(self,param):
+        x,y,l = param
+        self.size = self.start_size//l
+        self.x = -self.size + (-x)%self.size
+        self.y = -self.size + (-y)%self.size
+
+    def draw(self):
+        for i in range (width//self.size+2):
+            pygame.draw.line(self.screen,self.color,(self.x+i*self.size,0),(self.x+i*self.size,height))
+
+        for i in range (height//self.size+2):
+                    pygame.draw.line(self.screen,self.color,(0,self.y+i*self.size),(width,self.y+i*self.size))
+
+
 def scroll(event):
     global color
     color=combo.get()
@@ -83,6 +107,8 @@ screen = pygame.display.set_mode((width, height))
 pygame.display.set_caption('бактерия')
 run = True
 
+grid = Grid((0,200,200),screen)
+
 while run:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -102,14 +128,17 @@ while run:
             main_socket.send(msg.encode())
 
     
-    data = main_socket.recv(1024).decode()
+    data = main_socket.recv(4096).decode()
     data = find(data)
 
 
     print (data)
     screen.fill('darkgreen')
     if data!=['']:
-        radius = int(data[0])
+        param = list(map(int,data[0].split( )))
+        radius = param[0]
+        grid.update(param[1:])
+        grid.draw()
         draw_bacteries(data[1:])
     pygame.draw.circle(screen,color, CC, radius)
     pygame.display.update()

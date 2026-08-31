@@ -185,7 +185,7 @@ fake = faker.Faker("ru_RU")
 food_count = 1000
 foods = []
 for i in range(food_count):
-    foods.append(Food(random.randint(0,width_room),random.randint(0,height_room),random.randint(1,10),random.choice(colors)))
+    foods.append(Food(random.randint(0,width_room),random.randint(0,height_room),random.randint(10,25),random.choice(colors)))
 
 main_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 main_socket.setsockopt(socket.IPPROTO_TCP, socket.TCP_NODELAY, 1)
@@ -327,7 +327,10 @@ while run:
                     visable_bacteries[hero2.id].append(data)    
     for id in list(players):
         r_ = str(round(players[id].size/players[id].l))
-        visable_bacteries[id]=[r_] + visable_bacteries[id]
+        x_ = str(round(players[id].x/players[id].l))
+        y_ = str(round(players[id].y/players[id].l))
+        l_ = str(round(players[id].l))
+        visable_bacteries[id]=[f"{r_} {x_} {y_} {l_}"] + visable_bacteries[id]
         visable_bacteries[id] = f'<{",".join(visable_bacteries[id])}>'
 
     for id in list(players):
@@ -367,3 +370,5 @@ while run:
 
 s.close()
 main_socket.close()
+
+#pyuic5 -x ???.ui -o ???.py
